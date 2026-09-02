@@ -3,10 +3,16 @@ import type { Node, Edge } from "@xyflow/react";
 import pipelineData from "@/data/pipeline-example.json";
 
 // Wide enough for the pipeline-stage layer's real graph/sheet views
-// (w-96 = 384px) without overlapping neighbors.
-export const COL = [0, 420, 840, 1260, 1680];
+// (w-[900px]) without overlapping neighbors, now that both layers render
+// full real graphs rather than a small snippet or a few lines of prose.
+export const COL = [0, 980, 1960, 2940, 3920];
 const ARCHITECTURE_Y = 0;
-const STAGE_Y = 360;
+const STAGE_Y = 780;
+
+const architectureGraphs = pipelineData.architectureGraphs as Record<
+  string,
+  { nodes: { id: string; label: string; kind: "iri" | "blank" | "literal" }[]; edges: { source: string; target: string; label: string }[] }
+>;
 
 export const architectureNodes: Node[] = [
   {
@@ -15,8 +21,8 @@ export const architectureNodes: Node[] = [
     position: { x: COL[0], y: ARCHITECTURE_Y },
     data: {
       label: "Spreadsheet Ontology",
-      description: "A raw, structure-agnostic cell grid, plus an optional layout layer -- independent of any domain.",
       repoUrl: "https://github.com/OpenFASTER-Standard/spreadsheet-ontology",
+      graph: architectureGraphs["spreadsheet-ontology"],
     },
   },
   {
@@ -25,8 +31,8 @@ export const architectureNodes: Node[] = [
     position: { x: COL[1], y: ARCHITECTURE_Y },
     data: {
       label: "Institutional Ontology",
-      description: "Framework-agnostic concepts -- given names, roles, forms of address -- shared across MiKaDiv and KaFE.",
       repoUrl: "https://github.com/OpenFASTER-Standard/institutional-ontology",
+      graph: architectureGraphs["institutional-ontology"],
     },
   },
   {
@@ -35,8 +41,8 @@ export const architectureNodes: Node[] = [
     position: { x: COL[2], y: ARCHITECTURE_Y },
     data: {
       label: "Realizations",
-      description: "Ties the four ontologies together for one real module: KaFE's real, curated structure.",
       repoUrl: "https://github.com/OpenFASTER-Standard/realizations",
+      graph: architectureGraphs["realizations"],
     },
   },
   {
@@ -45,8 +51,8 @@ export const architectureNodes: Node[] = [
     position: { x: COL[3], y: ARCHITECTURE_Y },
     data: {
       label: "XML Ontology",
-      description: "A concrete XML document's real structure -- real elements in real order, not a grammar of what's allowed.",
       repoUrl: "https://github.com/OpenFASTER-Standard/xml-ontology",
+      graph: architectureGraphs["xml-ontology"],
     },
   },
   {
@@ -55,8 +61,8 @@ export const architectureNodes: Node[] = [
     position: { x: COL[4], y: ARCHITECTURE_Y },
     data: {
       label: "XSD Ontology",
-      description: "XML Schema's own abstract Schema Component Model, made graph-expressible.",
       repoUrl: "https://github.com/OpenFASTER-Standard/xsd-ontology",
+      graph: architectureGraphs["xsd-ontology"],
     },
   },
 ];
@@ -76,8 +82,9 @@ export const pipelineStageNodes: Node[] = pipelineData.stages.map((stage, i) => 
     title: stage.title,
     subtitle: stage.subtitle,
     kind: stage.kind,
-    sheet: "sheet" in stage ? stage.sheet : undefined,
+    sheets: "sheets" in stage ? stage.sheets : undefined,
     graph: "graph" in stage ? stage.graph : undefined,
+    highlightId: "highlightId" in stage ? stage.highlightId : undefined,
     lang: "lang" in stage ? stage.lang : undefined,
     snippet: "snippet" in stage ? stage.snippet : undefined,
   },
