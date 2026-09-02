@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -8,29 +7,20 @@ import {
   BackgroundVariant,
   Controls,
   MiniMap,
-  Panel,
   useNodesState,
-  type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 import { ArchitectureNode } from "./nodes/architecture-node";
 import { PipelineStageNode } from "./nodes/pipeline-stage-node";
-import { FlowEdge } from "./edges/flow-edge";
-import { architectureNodes, pipelineStageNodes, flowEdges } from "@/lib/canvas-layout";
+import { architectureNodes, pipelineStageNodes } from "@/lib/canvas-layout";
 
 const nodeTypes = {
   architectureNode: ArchitectureNode,
   pipelineStageNode: PipelineStageNode,
 };
 
-const edgeTypes = { flowEdge: FlowEdge };
-
-const STAGE_DURATION_MS = 1600;
-
 function PipelineCanvasInner() {
-  const [activeStageIndex, setActiveStageIndex] = useState<number | null>(null);
-  const [playing, setPlaying] = useState(false);
   // useNodesState (not a plain derived array) so dragging actually works:
   // React Flow tracks a node's position in its own internal store during a
   // drag, but only PERSISTS that change if something feeds the resulting
@@ -42,42 +32,6 @@ function PipelineCanvasInner() {
   // reference every time too, which would have fought any position state
   // it did track.
   const [nodes, , onNodesChange] = useNodesState([...architectureNodes, ...pipelineStageNodes]);
-
-  const play = useCallback(() => {
-    setPlaying(true);
-    setActiveStageIndex(0);
-    for (let i = 1; i < pipelineStageNodes.length; i++) {
-      setTimeout(() => setActiveStageIndex(i), i * STAGE_DURATION_MS);
-    }
-    setTimeout(() => {
-      setPlaying(false);
-      setActiveStageIndex(null);
-    }, pipelineStageNodes.length * STAGE_DURATION_MS);
-  }, []);
-
-  // The "active" highlight is presentational, not a position change --
-  // overlaid on top of whatever `nodes` currently holds (real, possibly
-  // user-dragged positions) rather than folded into the drag-tracked state
-  // itself.
-  const displayNodes = useMemo(
-    () =>
-      nodes.map((node, i) =>
-        node.type === "pipelineStageNode"
-          ? { ...node, data: { ...node.data, active: activeStageIndex === i - architectureNodes.length } }
-          : node,
-      ),
-    [nodes, activeStageIndex],
-  );
-
-  // No architecture/governance connector lines -- operator asked for all
-  // lines between the big nodes removed. flowEdges are kept (not dropped
-  // entirely) since FlowEdge itself no longer draws a persistent line; the
-  // edge's path is only used as the amber particle's travel path during
-  // play, not shown at rest.
-  const edges: Edge[] = flowEdges.map((edge, i) => ({
-    ...edge,
-    data: { ...edge.data, active: playing && activeStageIndex === i + 1 },
-  }));
 
   return (
     <div className="relative h-screen w-screen bg-neutral-50">
@@ -95,11 +49,9 @@ function PipelineCanvasInner() {
           left and right edges by the same amount (confirmed live via each
           node's real getBoundingClientRect()) rather than actually fitting. */}
       <ReactFlow
-        nodes={displayNodes}
-        edges={edges}
+        nodes={nodes}
         onNodesChange={onNodesChange}
         nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
         fitView
         minZoom={0.1}
         onlyRenderVisibleElements
@@ -107,17 +59,6 @@ function PipelineCanvasInner() {
         <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color="#d4d4d4" />
         <Controls />
         <MiniMap pannable zoomable maskColor="rgba(255,255,255,0.6)" nodeColor="#d4d4d4" style={{ backgroundColor: "#fafafa" }} />
-        <Panel position="top-right">
-          <button
-            type="button"
-            onClick={play}
-            disabled={playing}
-            aria-label="Watch Hans's given name flow through the pipeline"
-            className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-900 shadow hover:bg-neutral-100 disabled:opacity-50"
-          >
-            {playing ? "Playing..." : "▶ Watch Hans's given name flow through"}
-          </button>
-        </Panel>
       </ReactFlow>
     </div>
   );

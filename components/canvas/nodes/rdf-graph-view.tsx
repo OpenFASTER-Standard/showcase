@@ -15,7 +15,6 @@ export type RdfGraphData = { nodes: RdfGraphNode[]; edges: RdfGraphEdge[] };
 const IRI_COLOR = "#2b6cb0";
 const BLANK_COLOR = "#7c3aed";
 const LITERAL_COLOR = "#b8860b";
-const HIGHLIGHT_COLOR = "#f59e0b"; // same amber as the active-stage border/flow-edge particle
 
 function colorFor(kind: RdfGraphNode["kind"]): string {
   if (kind === "iri") return IRI_COLOR;
@@ -106,15 +105,7 @@ function layout(nodes: RdfGraphNode[], edges: RdfGraphEdge[]): Map<string, Point
 // (native pan/zoom/drag/hover), with no zoom-dependent gating needed.
 const PIXELS_PER_UNIT = 70;
 
-export function RdfGraphView({
-  graph,
-  highlightId,
-  active,
-}: {
-  graph: RdfGraphData;
-  highlightId?: string;
-  active?: boolean;
-}) {
+export function RdfGraphView({ graph }: { graph: RdfGraphData }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
   const { zoom, x, y } = useViewport();
@@ -127,7 +118,6 @@ export function RdfGraphView({
       ...graph.nodes.map((node) => ({
         data: { id: node.id, label: displayLabel(node), color: colorFor(node.kind) },
         position: { x: positions.get(node.id)!.x * PIXELS_PER_UNIT, y: positions.get(node.id)!.y * PIXELS_PER_UNIT },
-        classes: active && highlightId && node.id === highlightId ? "highlighted" : undefined,
       })),
       ...graph.edges.map((edge, i) => ({
         data: { id: `e${i}`, source: edge.source, target: edge.target, label: edge.label },
@@ -152,15 +142,6 @@ export function RdfGraphView({
             "text-valign": "center",
             "text-halign": "right",
             "text-margin-x": 4,
-          },
-        },
-        {
-          selector: "node.highlighted",
-          style: {
-            "background-color": HIGHLIGHT_COLOR,
-            width: 20,
-            height: 20,
-            "font-weight": "bold",
           },
         },
         {
@@ -199,7 +180,7 @@ export function RdfGraphView({
       cyRef.current = null;
       cy.destroy();
     };
-  }, [graph, highlightId, active]);
+  }, [graph]);
 
   // React Flow zooms/pans the outer canvas by mutating an ancestor div's
   // `transform: scale(...)` directly via JS on every frame -- no CSS

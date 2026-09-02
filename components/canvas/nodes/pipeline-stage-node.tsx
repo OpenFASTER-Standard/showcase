@@ -9,19 +9,13 @@ export type PipelineStageNodeData = {
   kind: "sheet" | "graph" | "text";
   sheets?: Sheet[];
   graph?: RdfGraphData;
-  highlightId?: string;
   lang?: "xml";
   snippet?: string;
-  active?: boolean;
 };
 
 export function PipelineStageNode({ data }: NodeProps & { data: PipelineStageNodeData }) {
   return (
-    <div
-      className={`w-[900px] rounded-lg border p-4 shadow-sm transition-colors ${
-        data.active ? "border-amber-400 bg-amber-50" : "border-neutral-200 bg-white"
-      }`}
-    >
+    <div className="w-[900px] rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Top} id="gov" />
       <div className="mb-3">
@@ -29,9 +23,7 @@ export function PipelineStageNode({ data }: NodeProps & { data: PipelineStageNod
         <div className="text-xs text-neutral-500">{data.subtitle}</div>
       </div>
       {data.kind === "sheet" && data.sheets && <SheetView sheets={data.sheets} />}
-      {data.kind === "graph" && data.graph && (
-        <RdfGraphView graph={data.graph} highlightId={data.highlightId} active={data.active} />
-      )}
+      {data.kind === "graph" && data.graph && <RdfGraphView graph={data.graph} />}
       {data.kind === "text" && data.snippet && (
         <pre className="nodrag nowheel max-h-[600px] overflow-auto whitespace-pre-wrap font-mono text-xs text-neutral-700">
           {data.snippet}
