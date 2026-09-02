@@ -69,7 +69,21 @@ function PipelineCanvasInner() {
 
   return (
     <div className="relative h-screen w-screen bg-neutral-50">
-      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView>
+      {/* onlyRenderVisibleElements: every architecture/pipeline-stage node
+          with a graph now mounts its own Sigma renderer, each holding its
+          own WebGL context -- 8 of them, close enough to real browsers'
+          typical simultaneous-context limits that a fully mounted canvas
+          hit "Too many active WebGL contexts" live. Unmounting off-screen
+          nodes (which tears down their Sigma instance too, via its own
+          effect cleanup) keeps only the actually-visible ones alive. */}
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        fitView
+        onlyRenderVisibleElements
+      >
         <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color="#d4d4d4" />
         <Controls />
         <MiniMap pannable zoomable maskColor="rgba(255,255,255,0.6)" nodeColor="#d4d4d4" style={{ backgroundColor: "#fafafa" }} />

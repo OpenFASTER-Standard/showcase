@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useViewport } from "@xyflow/react";
 import Graph from "graphology";
 import Sigma from "sigma";
 
@@ -16,6 +17,16 @@ const IRI_COLOR = "#2b6cb0";
 const BLANK_COLOR = "#7c3aed";
 const LITERAL_COLOR = "#b8860b";
 const HIGHLIGHT_COLOR = "#f59e0b"; // same amber as the active-stage border/flow-edge particle
+
+// Every architecture/pipeline-stage graph node mounts its own Sigma
+// renderer, each holding its own WebGL context. At the canvas's initial
+// fitView, all of them are simultaneously on screen (just small) -- real,
+// not a dev-mode artifact: confirmed live against a production static
+// export too, "Too many active WebGL contexts" fires and silently blanks
+// the oldest one. Real fix: only mount the actual WebGL canvas once the
+// user has zoomed in enough to usefully read it; below that, show a real
+// (not placeholder-fake) summary of the graph's own real node/edge counts.
+const ZOOM_RENDER_THRESHOLD = 0.5;
 
 function colorFor(kind: RdfGraphNode["kind"]): string {
   if (kind === "iri") return IRI_COLOR;
@@ -95,7 +106,7 @@ function layout(nodes: RdfGraphNode[], edges: RdfGraphEdge[]): Map<string, Point
   return positions;
 }
 
-export function RdfGraphView({
+function SigmaGraphCanvas({
   graph,
   highlightId,
   active,
@@ -109,7 +120,11 @@ export function RdfGraphView({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const g = new Graph();
+    // multi: true -- real RDF data legitimately has more than one edge
+    // between the same node pair (two different predicates connecting the
+    // same subject/object), which a plain (non-multi) graphology Graph
+    // rejects as a duplicate edge.
+    const g = new Graph({ multi: true });
     const positions = layout(graph.nodes, graph.edges);
     for (const node of graph.nodes) {
       const pos = positions.get(node.id)!;
@@ -138,5 +153,57 @@ export function RdfGraphView({
     return () => renderer.kill();
   }, [graph, highlightId, active]);
 
-  return <div ref={containerRef} className="nodrag nowheel h-[600px] w-full rounded border border-neutral-200 bg-white" />;
+  return <div ref={containerRef} className="nodrag nowheel h-full w-full" />;
+}
+
+export function RdfGraphView({
+  graph,
+  highlightId,
+  active,
+}: {
+  graph: RdfGraphData;
+  highlightId?: string;
+  active?: boolean;
+}) {
+  const { zoom } = useViewport();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [inRealViewport, setInRealViewport] = useState(false);
+
+  // React Flow's own zoom is global, shared by every node -- gating on
+  // zoom alone (an earlier version of this fix) still mounted all 8 Sigma
+  // instances at once the moment the user zoomed in anywhere, since every
+  // node crosses the same threshold together. What actually varies
+  // per-node is real on-screen presence: IntersectionObserver against the
+  // true browser viewport (not React Flow's virtual one), which shrinks
+  // to cover only 1-2 of these 900px-wide nodes once zoomed in normally.
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => setInRealViewport(entry.isIntersecting), {
+      threshold: 0.4,
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // The currently-playing stage always renders for real, even at overview
+  // zoom -- otherwise "watch Hans's given name flow through" would animate
+  // into an invisible placeholder. Play only activates one stage at a
+  // time, so this adds at most one extra live WebGL context, not all 8.
+  const canRender = (zoom > ZOOM_RENDER_THRESHOLD && inRealViewport) || Boolean(active);
+
+  return (
+    <div ref={wrapperRef} className="nodrag nowheel h-[600px] w-full rounded border border-neutral-200 bg-white">
+      {canRender ? (
+        <SigmaGraphCanvas graph={graph} highlightId={highlightId} active={active} />
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-neutral-500">
+          <span className="text-sm font-medium">
+            {graph.nodes.length} nodes, {graph.edges.length} edges
+          </span>
+          <span className="text-xs">Zoom in to explore the graph</span>
+        </div>
+      )}
+    </div>
+  );
 }
