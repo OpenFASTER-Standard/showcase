@@ -32,7 +32,7 @@ export const architectureNodes: Node[] = [
     ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "Spreadsheet Ontology",
-      repoUrl: "https://github.com/OpenFASTER-Standard/spreadsheet-ontology",
+      fileUrl: "https://github.com/OpenFASTER-Standard/spreadsheet-ontology/blob/main/spreadsheet-ontology.owl",
       graph: architectureGraphs["spreadsheet-ontology"],
     },
   },
@@ -43,7 +43,7 @@ export const architectureNodes: Node[] = [
     ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "Institutional Ontology",
-      repoUrl: "https://github.com/OpenFASTER-Standard/institutional-ontology",
+      fileUrl: "https://github.com/OpenFASTER-Standard/institutional-ontology/blob/main/institutional-ontology.owl",
       graph: architectureGraphs["institutional-ontology"],
     },
   },
@@ -54,7 +54,7 @@ export const architectureNodes: Node[] = [
     ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "Realizations",
-      repoUrl: "https://github.com/OpenFASTER-Standard/realizations",
+      fileUrl: "https://github.com/OpenFASTER-Standard/realizations/blob/main/modules/kafe.ttl",
       graph: architectureGraphs["realizations"],
     },
   },
@@ -65,7 +65,7 @@ export const architectureNodes: Node[] = [
     ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "XML Ontology",
-      repoUrl: "https://github.com/OpenFASTER-Standard/xml-ontology",
+      fileUrl: "https://github.com/OpenFASTER-Standard/xml-ontology/blob/main/xml-ontology.owl",
       graph: architectureGraphs["xml-ontology"],
     },
   },
@@ -76,7 +76,7 @@ export const architectureNodes: Node[] = [
     ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "XSD Ontology",
-      repoUrl: "https://github.com/OpenFASTER-Standard/xsd-ontology",
+      fileUrl: "https://github.com/OpenFASTER-Standard/xsd-ontology/blob/main/xsd-ontology.owl",
       graph: architectureGraphs["xsd-ontology"],
     },
   },

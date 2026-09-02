@@ -4,7 +4,7 @@ import { RdfGraphView, type RdfGraphData } from "./rdf-graph-view";
 
 export type ArchitectureNodeData = {
   label: string;
-  repoUrl: string;
+  fileUrl: string;
   graph: RdfGraphData;
 };
 
@@ -13,7 +13,7 @@ export function ArchitectureNode({ data }: NodeProps & { data: ArchitectureNodeD
     <div className="w-[900px] rounded-lg border border-neutral-200 bg-white p-4 text-neutral-900 shadow-sm">
       <Handle type="target" position={Position.Top} />
       <a
-        href={data.repoUrl}
+        href={data.fileUrl}
         target="_blank"
         rel="noreferrer"
         className="text-base font-semibold tracking-tight text-blue-700 hover:underline"
