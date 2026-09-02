@@ -12,34 +12,200 @@
       "id": "excel",
       "title": "Excel",
       "subtitle": "Personen sheet, row 2",
-      "lang": "text",
-      "snippet": "Antrag-ID | Role                    | Anrede | Vorname | Nachname\nA1        | STEUERPFLICHTIGE_PERSON | HERR   | Hans    | Muster"
+      "kind": "sheet",
+      "sheet": {
+        "headers": [
+          "Antrag-ID",
+          "Role",
+          "Anrede",
+          "Vorname",
+          "Nachname"
+        ],
+        "row": [
+          "A1",
+          "STEUERPFLICHTIGE_PERSON",
+          "HERR",
+          "Hans",
+          "Muster"
+        ]
+      }
     },
     {
       "id": "sso",
       "title": "SSO graph",
       "subtitle": "extract_raw_cells",
-      "lang": "turtle",
-      "snippet": "<urn:sso:workbook:/tmp/openfaster-showcase-fixture/fixture.xlsx/sheet/Personen/cell/2/4>\n    sso:rowIndex 2 ;\n    sso:columnIndex 4 ;\n    sso:literalValue \"Hans\" ."
+      "kind": "graph",
+      "graph": {
+        "nodes": [
+          {
+            "id": "urn:sso:workbook:/tmp/openfaster-showcase-fixture/fixture.xlsx/sheet/Personen/cell/2/4",
+            "label": "cell (row 2, col 4)",
+            "kind": "iri"
+          },
+          {
+            "id": "lit:sso:rowIndex|2",
+            "label": "\"2\"",
+            "kind": "literal"
+          },
+          {
+            "id": "lit:sso:columnIndex|4",
+            "label": "\"4\"",
+            "kind": "literal"
+          },
+          {
+            "id": "lit:sso:literalValue|Hans",
+            "label": "\"Hans\"",
+            "kind": "literal"
+          }
+        ],
+        "edges": [
+          {
+            "source": "urn:sso:workbook:/tmp/openfaster-showcase-fixture/fixture.xlsx/sheet/Personen/cell/2/4",
+            "target": "lit:sso:rowIndex|2",
+            "label": "sso:rowIndex"
+          },
+          {
+            "source": "urn:sso:workbook:/tmp/openfaster-showcase-fixture/fixture.xlsx/sheet/Personen/cell/2/4",
+            "target": "lit:sso:columnIndex|4",
+            "label": "sso:columnIndex"
+          },
+          {
+            "source": "urn:sso:workbook:/tmp/openfaster-showcase-fixture/fixture.xlsx/sheet/Personen/cell/2/4",
+            "target": "lit:sso:literalValue|Hans",
+            "label": "sso:literalValue"
+          }
+        ]
+      }
     },
     {
       "id": "abox",
       "title": "A-box graph",
       "subtitle": "interpret_master_detail",
-      "lang": "turtle",
-      "snippet": "<urn:record:person:2> ofr:partOfRecord <urn:record:antrag:A1> ;\n    ofr:hasRole <https://purl.openfaster.org/io/IO_0000008> .\n\n[] a ofr:FieldObservation ;\n    ofr:aboutRecord <urn:record:person:2> ;\n    ofr:observedConcept <https://purl.openfaster.org/io/IO_0000001> ;\n    ofr:hasValue \"Hans\" ."
+      "kind": "graph",
+      "graph": {
+        "nodes": [
+          {
+            "id": "urn:record:person:2",
+            "label": "Hans Muster (person)",
+            "kind": "iri"
+          },
+          {
+            "id": "urn:record:antrag:A1",
+            "label": "Erstattungsantrag A1",
+            "kind": "iri"
+          },
+          {
+            "id": "https://purl.openfaster.org/io/IO_0000008",
+            "label": "Taxpayer",
+            "kind": "iri"
+          },
+          {
+            "id": "N5d34037f2cb6408f8f2f295ef9910b70",
+            "label": "Vorname observation",
+            "kind": "iri"
+          },
+          {
+            "id": "https://purl.openfaster.org/io/IO_0000001",
+            "label": "All given names",
+            "kind": "iri"
+          },
+          {
+            "id": "lit:ofr:hasValue|Hans",
+            "label": "\"Hans\"",
+            "kind": "literal"
+          }
+        ],
+        "edges": [
+          {
+            "source": "urn:record:person:2",
+            "target": "urn:record:antrag:A1",
+            "label": "ofr:partOfRecord"
+          },
+          {
+            "source": "urn:record:person:2",
+            "target": "https://purl.openfaster.org/io/IO_0000008",
+            "label": "ofr:hasRole"
+          },
+          {
+            "source": "N5d34037f2cb6408f8f2f295ef9910b70",
+            "target": "urn:record:person:2",
+            "label": "ofr:aboutRecord"
+          },
+          {
+            "source": "N5d34037f2cb6408f8f2f295ef9910b70",
+            "target": "https://purl.openfaster.org/io/IO_0000001",
+            "label": "ofr:observedConcept"
+          },
+          {
+            "source": "N5d34037f2cb6408f8f2f295ef9910b70",
+            "target": "lit:ofr:hasValue|Hans",
+            "label": "ofr:hasValue"
+          }
+        ]
+      }
     },
     {
       "id": "xmlo",
       "title": "XMLO graph",
       "subtitle": "generate_instance",
-      "lang": "turtle",
-      "snippet": "[] a xmlo:Element ;\n    xmlo:elementName \"Vorname\" ;\n    xmlo:namespaceURI \"urn:bzst:kafe:ozg:v1\" ;\n    xmlo:textContent \"Hans\" ;\n    xmlo:childPosition 2 ."
+      "kind": "graph",
+      "graph": {
+        "nodes": [
+          {
+            "id": "N969305478a5c48098ed96662ec0a761c",
+            "label": "Vorname element",
+            "kind": "iri"
+          },
+          {
+            "id": "lit:xmlo:elementName|Vorname",
+            "label": "\"Vorname\"",
+            "kind": "literal"
+          },
+          {
+            "id": "lit:xmlo:namespaceURI|urn:bzst:kafe:ozg:v1",
+            "label": "\"urn:bzst:kafe:ozg:v1\"",
+            "kind": "literal"
+          },
+          {
+            "id": "lit:xmlo:textContent|Hans",
+            "label": "\"Hans\"",
+            "kind": "literal"
+          },
+          {
+            "id": "lit:xmlo:childPosition|2",
+            "label": "\"2\"",
+            "kind": "literal"
+          }
+        ],
+        "edges": [
+          {
+            "source": "N969305478a5c48098ed96662ec0a761c",
+            "target": "lit:xmlo:elementName|Vorname",
+            "label": "xmlo:elementName"
+          },
+          {
+            "source": "N969305478a5c48098ed96662ec0a761c",
+            "target": "lit:xmlo:namespaceURI|urn:bzst:kafe:ozg:v1",
+            "label": "xmlo:namespaceURI"
+          },
+          {
+            "source": "N969305478a5c48098ed96662ec0a761c",
+            "target": "lit:xmlo:textContent|Hans",
+            "label": "xmlo:textContent"
+          },
+          {
+            "source": "N969305478a5c48098ed96662ec0a761c",
+            "target": "lit:xmlo:childPosition|2",
+            "label": "xmlo:childPosition"
+          }
+        ]
+      }
     },
     {
       "id": "xml",
       "title": "Real XML",
       "subtitle": "serialize_xmlo_to_xml",
+      "kind": "text",
       "lang": "xml",
       "snippet": "<Erstattungsantrag xmlns=\"urn:bzst:kafe:ozg:v1\">\n  <AllgAngaben>\n    <SteuerpflichtigePerson>\n      <NatuerlichePerson>\n        <NatP>\n          <Anrede>HERR</Anrede>\n          <Vorname>Hans</Vorname>\n          <Nachname>Muster</Nachname>\n        </NatP>\n      </NatuerlichePerson>\n    </SteuerpflichtigePerson>\n    <GesetzlicheVertretung>\n      <NatuerlichePerson>\n        <Anrede>FRAU</Anrede>\n        <Vorname>Erika</Vorname>\n        <Nachname>Vertreter</Nachname>\n      </NatuerlichePerson>\n    </GesetzlicheVertretung>\n  </AllgAngaben>\n</Erstattungsantrag>"
     }

@@ -2,7 +2,9 @@ import type { Node, Edge } from "@xyflow/react";
 
 import pipelineData from "@/data/pipeline-example.json";
 
-export const COL = [0, 320, 640, 960, 1280];
+// Wide enough for the pipeline-stage layer's real graph/sheet views
+// (w-96 = 384px) without overlapping neighbors.
+export const COL = [0, 420, 840, 1260, 1680];
 const ARCHITECTURE_Y = 0;
 const STAGE_Y = 360;
 
@@ -73,8 +75,11 @@ export const pipelineStageNodes: Node[] = pipelineData.stages.map((stage, i) => 
   data: {
     title: stage.title,
     subtitle: stage.subtitle,
-    lang: stage.lang,
-    snippet: stage.snippet,
+    kind: stage.kind,
+    sheet: "sheet" in stage ? stage.sheet : undefined,
+    graph: "graph" in stage ? stage.graph : undefined,
+    lang: "lang" in stage ? stage.lang : undefined,
+    snippet: "snippet" in stage ? stage.snippet : undefined,
   },
 }));
 

@@ -8,6 +8,7 @@ import {
   BackgroundVariant,
   Controls,
   MiniMap,
+  Panel,
   type Node,
   type Edge,
 } from "@xyflow/react";
@@ -67,21 +68,23 @@ function PipelineCanvasInner() {
   ];
 
   return (
-    <div className="relative h-screen w-screen bg-neutral-950">
+    <div className="relative h-screen w-screen bg-neutral-50">
       <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView>
-        <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color="#333" />
+        <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color="#d4d4d4" />
         <Controls />
-        <MiniMap pannable zoomable maskColor="rgba(0,0,0,0.6)" nodeColor="#404040" style={{ backgroundColor: "#0a0a0a" }} />
+        <MiniMap pannable zoomable maskColor="rgba(255,255,255,0.6)" nodeColor="#d4d4d4" style={{ backgroundColor: "#fafafa" }} />
+        <Panel position="top-right">
+          <button
+            type="button"
+            onClick={play}
+            disabled={playing}
+            aria-label="Watch Hans's given name flow through the pipeline"
+            className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-900 shadow hover:bg-neutral-100 disabled:opacity-50"
+          >
+            {playing ? "Playing..." : "▶ Watch Hans's given name flow through"}
+          </button>
+        </Panel>
       </ReactFlow>
-      <button
-        type="button"
-        onClick={play}
-        disabled={playing}
-        aria-label="Watch Hans's given name flow through the pipeline"
-        className="absolute bottom-6 left-6 z-10 rounded-md border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-100 shadow hover:bg-neutral-800 disabled:opacity-50"
-      >
-        {playing ? "Playing..." : "▶ Watch Hans's given name flow through"}
-      </button>
     </div>
   );
 }
