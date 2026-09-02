@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import cytoscape from "cytoscape";
+import { useViewport } from "@xyflow/react";
 
 export type RdfGraphNode = { id: string; label: string; kind: "iri" | "blank" | "literal" };
 export type RdfGraphEdge = { source: string; target: string; label: string };
@@ -115,6 +116,8 @@ export function RdfGraphView({
   active?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const cyRef = useRef<cytoscape.Core | null>(null);
+  const { zoom, x, y } = useViewport();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -176,18 +179,43 @@ export function RdfGraphView({
       ],
     });
     cy.fit(undefined, 20);
+    cyRef.current = cy;
 
     // Cytoscape renders to <canvas>, not real DOM/SVG nodes, so e2e tests
     // can't query rendered content directly (no `getByText`/`svg circle`
-    // locators). This exposes the real element counts for that purpose --
-    // a minimal testability hook, not a runtime feature.
-    (containerRef.current as HTMLDivElement & { __cyNodeCount?: number; __cyEdgeCount?: number }).__cyNodeCount =
-      cy.nodes().length;
-    (containerRef.current as HTMLDivElement & { __cyNodeCount?: number; __cyEdgeCount?: number }).__cyEdgeCount =
-      cy.edges().length;
+    // locators). This exposes the real element counts and the live
+    // instance itself for that purpose -- a minimal testability hook, not
+    // a runtime feature.
+    const hookTarget = containerRef.current as HTMLDivElement & {
+      __cyNodeCount?: number;
+      __cyEdgeCount?: number;
+      __cy?: cytoscape.Core;
+    };
+    hookTarget.__cyNodeCount = cy.nodes().length;
+    hookTarget.__cyEdgeCount = cy.edges().length;
+    hookTarget.__cy = cy;
 
-    return () => cy.destroy();
+    return () => {
+      cyRef.current = null;
+      cy.destroy();
+    };
   }, [graph, highlightId, active]);
+
+  // React Flow zooms/pans the outer canvas by mutating an ancestor div's
+  // `transform: scale(...)` directly via JS on every frame -- no CSS
+  // transition/animation, no scroll, no layout-size change. Cytoscape's own
+  // mouse-to-graph coordinate math caches a "container client coords" scale
+  // factor (BRp$e.findContainerClientCoords in its bundled source) and only
+  // invalidates that cache on transitionend/animationend/scroll/resize/
+  // ResizeObserver -- none of which React Flow's transform ever fires. Left
+  // alone, the cached scale silently goes stale the moment the outer canvas
+  // is zoomed, so every subsequent in-graph wheel-zoom centers on the wrong
+  // point. cy.resize() is the public API that forces Cytoscape to discard
+  // that cache (it calls the renderer's invalidateContainerClientCoordsCache
+  // internally), so re-run it whenever the outer viewport changes.
+  useEffect(() => {
+    cyRef.current?.resize();
+  }, [zoom, x, y]);
 
   return <div ref={containerRef} className="nodrag nowheel h-[600px] w-full rounded border border-neutral-200 bg-white" />;
 }
