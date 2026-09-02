@@ -1,7 +1,10 @@
 import type { Node, Edge } from "@xyflow/react";
 
+import pipelineData from "@/data/pipeline-example.json";
+
 export const COL = [0, 320, 640, 960, 1280];
 const ARCHITECTURE_Y = 0;
+const STAGE_Y = 360;
 
 export const architectureNodes: Node[] = [
   {
@@ -61,4 +64,25 @@ export const architectureEdges: Edge[] = [
   { id: "real-sso", source: "realizations", target: "spreadsheet-ontology", type: "smoothstep", label: "layout shape from" },
   { id: "real-xmlo", source: "realizations", target: "xml-ontology", type: "smoothstep", label: "instance shape from" },
   { id: "real-xsdo", source: "realizations", target: "xsd-ontology", type: "smoothstep", label: "structural shape from" },
+];
+
+export const pipelineStageNodes: Node[] = pipelineData.stages.map((stage, i) => ({
+  id: `stage-${stage.id}`,
+  type: "pipelineStageNode",
+  position: { x: COL[i], y: STAGE_Y },
+  data: {
+    title: stage.title,
+    subtitle: stage.subtitle,
+    lang: stage.lang,
+    snippet: stage.snippet,
+  },
+}));
+
+export const governanceEdges: Edge[] = [
+  { id: "gov-excel", source: "stage-excel", sourceHandle: "gov", target: "spreadsheet-ontology", type: "straight", style: { strokeDasharray: "4 4" } },
+  { id: "gov-sso", source: "stage-sso", sourceHandle: "gov", target: "spreadsheet-ontology", type: "straight", style: { strokeDasharray: "4 4" } },
+  { id: "gov-abox-io", source: "stage-abox", sourceHandle: "gov", target: "institutional-ontology", type: "straight", style: { strokeDasharray: "4 4" } },
+  { id: "gov-abox-real", source: "stage-abox", sourceHandle: "gov", target: "realizations", type: "straight", style: { strokeDasharray: "4 4" } },
+  { id: "gov-xmlo", source: "stage-xmlo", sourceHandle: "gov", target: "xml-ontology", type: "straight", style: { strokeDasharray: "4 4" } },
+  { id: "gov-xml", source: "stage-xml", sourceHandle: "gov", target: "xsd-ontology", type: "straight", style: { strokeDasharray: "4 4" } },
 ];
