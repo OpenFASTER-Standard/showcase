@@ -71,7 +71,7 @@ function PipelineCanvasInner() {
       <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView>
         <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color="#333" />
         <Controls />
-        <MiniMap pannable zoomable />
+        <MiniMap pannable zoomable maskColor="rgba(0,0,0,0.6)" nodeColor="#404040" style={{ backgroundColor: "#0a0a0a" }} />
       </ReactFlow>
       <button
         type="button"
