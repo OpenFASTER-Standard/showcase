@@ -76,12 +76,19 @@ function PipelineCanvasInner() {
           hit "Too many active WebGL contexts" live. Unmounting off-screen
           nodes (which tears down their Sigma instance too, via its own
           effect cleanup) keeps only the actually-visible ones alive. */}
+      {/* minZoom: React Flow's own default floor is 0.5 -- this canvas's
+          real content (5 columns ~980px apart, 900px-wide nodes) needs
+          fitView to reach ~0.37 to show everything at once. Left at the
+          default, fitView silently clamped to 0.5, overflowing both the
+          left and right edges by the same amount (confirmed live via each
+          node's real getBoundingClientRect()) rather than actually fitting. */}
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
+        minZoom={0.1}
         onlyRenderVisibleElements
       >
         <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color="#d4d4d4" />

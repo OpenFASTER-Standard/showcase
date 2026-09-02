@@ -7,8 +7,17 @@ import { SheetView, type Sheet } from "./sheet-view";
 // Sigma.js references WebGL2RenderingContext at module-load time, which
 // doesn't exist during Next.js's server-side prerender step (static
 // export builds the page once on the server first) -- ssr: false defers
-// loading this module until the browser, where WebGL is real.
-const RdfGraphView = dynamic(() => import("./rdf-graph-view").then((m) => m.RdfGraphView), { ssr: false });
+// loading this module until the browser, where WebGL is real. The
+// `loading` fallback reserves the exact same box RdfGraphView itself
+// renders (h-[600px] w-full) -- without it, every graph node is briefly
+// shorter before the dynamic import resolves, and React Flow's initial
+// fitView measures that transient shorter size and never re-fits once the
+// real content grows in, leaving the whole canvas mis-framed (confirmed
+// live: the leftmost column was clipped off-screen on every fresh load).
+const RdfGraphView = dynamic(() => import("./rdf-graph-view").then((m) => m.RdfGraphView), {
+  ssr: false,
+  loading: () => <div className="h-[600px] w-full rounded border border-neutral-200 bg-white" />,
+});
 
 export type PipelineStageNodeData = {
   title: string;

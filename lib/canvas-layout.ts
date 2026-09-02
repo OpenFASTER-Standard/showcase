@@ -14,11 +14,22 @@ const architectureGraphs = pipelineData.architectureGraphs as Record<
   { nodes: { id: string; label: string; kind: "iri" | "blank" | "literal" }[]; edges: { source: string; target: string; label: string }[] }
 >;
 
+// initialWidth/initialHeight: a hint matching each node's real CSS size
+// (w-[900px], and each body's real rendered height), superseded by React
+// Flow's own measurement once mounted. Without this hint, MiniMap's own
+// node lookup (nodeHasDimensions()) requires a node to already have been
+// measured before it'll draw anything for it at all -- confirmed live: the
+// MiniMap rendered completely empty (not just low-contrast) until this was
+// added, even though fitView/the main canvas both worked from real
+// measured sizes.
+const ARCHITECTURE_NODE_SIZE = { initialWidth: 900, initialHeight: 670 };
+
 export const architectureNodes: Node[] = [
   {
     id: "spreadsheet-ontology",
     type: "architectureNode",
     position: { x: COL[0], y: ARCHITECTURE_Y },
+    ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "Spreadsheet Ontology",
       repoUrl: "https://github.com/OpenFASTER-Standard/spreadsheet-ontology",
@@ -29,6 +40,7 @@ export const architectureNodes: Node[] = [
     id: "institutional-ontology",
     type: "architectureNode",
     position: { x: COL[1], y: ARCHITECTURE_Y },
+    ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "Institutional Ontology",
       repoUrl: "https://github.com/OpenFASTER-Standard/institutional-ontology",
@@ -39,6 +51,7 @@ export const architectureNodes: Node[] = [
     id: "realizations",
     type: "architectureNode",
     position: { x: COL[2], y: ARCHITECTURE_Y },
+    ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "Realizations",
       repoUrl: "https://github.com/OpenFASTER-Standard/realizations",
@@ -49,6 +62,7 @@ export const architectureNodes: Node[] = [
     id: "xml-ontology",
     type: "architectureNode",
     position: { x: COL[3], y: ARCHITECTURE_Y },
+    ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "XML Ontology",
       repoUrl: "https://github.com/OpenFASTER-Standard/xml-ontology",
@@ -59,6 +73,7 @@ export const architectureNodes: Node[] = [
     id: "xsd-ontology",
     type: "architectureNode",
     position: { x: COL[4], y: ARCHITECTURE_Y },
+    ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "XSD Ontology",
       repoUrl: "https://github.com/OpenFASTER-Standard/xsd-ontology",
@@ -78,6 +93,8 @@ export const pipelineStageNodes: Node[] = pipelineData.stages.map((stage, i) => 
   id: `stage-${stage.id}`,
   type: "pipelineStageNode",
   position: { x: COL[i], y: STAGE_Y },
+  initialWidth: 900,
+  initialHeight: stage.kind === "sheet" ? 230 : 690,
   data: {
     title: stage.title,
     subtitle: stage.subtitle,
