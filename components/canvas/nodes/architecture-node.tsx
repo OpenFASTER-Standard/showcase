@@ -1,6 +1,15 @@
+import dynamic from "next/dynamic";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 
-import { RdfGraphView, type RdfGraphData } from "./rdf-graph-view";
+import type { RdfGraphData } from "./rdf-graph-view";
+
+// Same reason as pipeline-stage-node.tsx, including the same `loading`
+// fallback reserving RdfGraphView's real final size up front so React
+// Flow's initial fitView doesn't measure a transiently shorter node.
+const RdfGraphView = dynamic(() => import("./rdf-graph-view").then((m) => m.RdfGraphView), {
+  ssr: false,
+  loading: () => <div className="h-[600px] w-full rounded border border-neutral-200 bg-white" />,
+});
 
 export type ArchitectureNodeData = {
   label: string;
