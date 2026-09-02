@@ -4,14 +4,39 @@ import { useEffect, useRef } from "react";
 import Graph from "graphology";
 import Sigma from "sigma";
 
-export type RdfGraphNode = { id: string; label: string; kind: "iri" | "literal" };
+export type RdfGraphNode = { id: string; label: string; kind: "iri" | "blank" | "literal" };
 export type RdfGraphEdge = { source: string; target: string; label: string };
 export type RdfGraphData = { nodes: RdfGraphNode[]; edges: RdfGraphEdge[] };
 
-// Matches riptide's own examples/graph-viewer/index.html convention:
-// gold nodes are literal values, blue nodes are IRIs (entities and types).
+// Matches riptide's own examples/graph-viewer/index.html convention for
+// the iri/literal pair: gold nodes are literal values, blue nodes are
+// IRIs. Blank nodes get a third, distinct color -- they are real objects
+// too, just unminted ones, and should read as neither an IRI nor a value.
 const IRI_COLOR = "#2b6cb0";
+const BLANK_COLOR = "#7c3aed";
 const LITERAL_COLOR = "#b8860b";
+const HIGHLIGHT_COLOR = "#f59e0b"; // same amber as the active-stage border/flow-edge particle
+
+function colorFor(kind: RdfGraphNode["kind"]): string {
+  if (kind === "iri") return IRI_COLOR;
+  if (kind === "blank") return BLANK_COLOR;
+  return LITERAL_COLOR;
+}
+
+// Real identifiers can be long (a full sso: cell URI is 70+ characters) --
+// keep the real id as the underlying data (RdfGraphNode.label is never
+// truncated by the exporter), just shorten what's actually drawn on the
+// canvas so a full graph doesn't turn into overlapping text.
+function displayLabel(node: RdfGraphNode): string {
+  if (node.kind === "literal") {
+    return node.label.length > 40 ? `${node.label.slice(0, 39)}…"` : node.label;
+  }
+  if (node.kind === "blank") {
+    return node.label.length > 14 ? `${node.label.slice(0, 12)}…` : node.label;
+  }
+  const tail = node.label.split(/[/#]/).filter(Boolean).pop() ?? node.label;
+  return tail.length > 40 ? `…${tail.slice(-39)}` : tail;
+}
 
 type Point = { x: number; y: number };
 
@@ -70,7 +95,15 @@ function layout(nodes: RdfGraphNode[], edges: RdfGraphEdge[]): Map<string, Point
   return positions;
 }
 
-export function RdfGraphView({ graph }: { graph: RdfGraphData }) {
+export function RdfGraphView({
+  graph,
+  highlightId,
+  active,
+}: {
+  graph: RdfGraphData;
+  highlightId?: string;
+  active?: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,12 +113,13 @@ export function RdfGraphView({ graph }: { graph: RdfGraphData }) {
     const positions = layout(graph.nodes, graph.edges);
     for (const node of graph.nodes) {
       const pos = positions.get(node.id)!;
+      const isHighlighted = Boolean(active && highlightId && node.id === highlightId);
       g.addNode(node.id, {
         x: pos.x,
         y: pos.y,
-        size: node.kind === "iri" ? 8 : 6,
-        label: node.label,
-        color: node.kind === "iri" ? IRI_COLOR : LITERAL_COLOR,
+        size: isHighlighted ? 14 : node.kind === "iri" ? 8 : node.kind === "blank" ? 7 : 6,
+        label: displayLabel(node),
+        color: isHighlighted ? HIGHLIGHT_COLOR : colorFor(node.kind),
       });
     }
     for (const edge of graph.edges) {
@@ -94,15 +128,15 @@ export function RdfGraphView({ graph }: { graph: RdfGraphData }) {
 
     const renderer = new Sigma(g, containerRef.current, {
       renderEdgeLabels: true,
-      labelSize: 10,
+      labelSize: 11,
       labelColor: { color: "#27272a" },
-      edgeLabelSize: 9,
+      edgeLabelSize: 10,
       edgeLabelColor: { color: "#71717a" },
       defaultEdgeColor: "#a3a3a3",
     });
 
     return () => renderer.kill();
-  }, [graph]);
+  }, [graph, highlightId, active]);
 
-  return <div ref={containerRef} className="nodrag nowheel h-48 w-full rounded border border-neutral-200 bg-white" />;
+  return <div ref={containerRef} className="nodrag nowheel h-[600px] w-full rounded border border-neutral-200 bg-white" />;
 }
