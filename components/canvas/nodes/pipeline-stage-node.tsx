@@ -33,7 +33,7 @@ export function PipelineStageNode({ data }: NodeProps & { data: PipelineStageNod
         <RdfGraphView graph={data.graph} highlightId={data.highlightId} active={data.active} />
       )}
       {data.kind === "text" && data.snippet && (
-        <pre className="max-h-[600px] overflow-auto whitespace-pre-wrap font-mono text-xs text-neutral-700">
+        <pre className="nodrag nowheel max-h-[600px] overflow-auto whitespace-pre-wrap font-mono text-xs text-neutral-700">
           {data.snippet}
         </pre>
       )}
