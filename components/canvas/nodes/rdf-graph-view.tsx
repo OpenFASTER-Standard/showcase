@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useViewport } from "@xyflow/react";
 import Graph from "graphology";
 import Sigma from "sigma";
@@ -19,13 +19,14 @@ const LITERAL_COLOR = "#b8860b";
 const HIGHLIGHT_COLOR = "#f59e0b"; // same amber as the active-stage border/flow-edge particle
 
 // Every architecture/pipeline-stage graph node mounts its own Sigma
-// renderer, each holding its own WebGL context. At the canvas's initial
-// fitView, all of them are simultaneously on screen (just small) -- real,
-// not a dev-mode artifact: confirmed live against a production static
-// export too, "Too many active WebGL contexts" fires and silently blanks
-// the oldest one. Real fix: only mount the actual WebGL canvas once the
-// user has zoomed in enough to usefully read it; below that, show a real
-// (not placeholder-fake) summary of the graph's own real node/edge counts.
+// renderer -- and each Sigma instance costs *six* real WebGL contexts, not
+// one (measured live: forcing all 8 graph nodes to mount simultaneously
+// created 48 real WebGL contexts, confirmed via a getContext() call
+// counter, not a guess). No zoom/visibility budget makes 8x6=48
+// simultaneous contexts safe against any real browser's limit, so the
+// interactive canvas stays gated -- but the *static* SVG preview below
+// costs zero WebGL contexts (plain SVG shapes), so it can always render
+// for real instead of leaving a zoomed-out node with just placeholder text.
 const ZOOM_RENDER_THRESHOLD = 0.5;
 
 function colorFor(kind: RdfGraphNode["kind"]): string {
@@ -156,6 +157,61 @@ function SigmaGraphCanvas({
   return <div ref={containerRef} className="nodrag nowheel h-full w-full" />;
 }
 
+// A static, non-interactive preview built from the exact same real
+// node/edge data and force-directed layout the interactive canvas uses --
+// plain SVG shapes, zero WebGL contexts, so it can render unconditionally
+// as the always-visible fallback while the interactive canvas stays gated.
+function SvgGraphPreview({ graph }: { graph: RdfGraphData }) {
+  const { nodePoints, edgeLines, viewBox } = useMemo(() => {
+    const positions = layout(graph.nodes, graph.edges);
+    const xs = [...positions.values()].map((p) => p.x);
+    const ys = [...positions.values()].map((p) => p.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const pad = 0.6;
+    const box = `${minX - pad} ${minY - pad} ${maxX - minX + pad * 2} ${maxY - minY + pad * 2}`;
+
+    const lines = graph.edges
+      .map((edge) => {
+        const source = positions.get(edge.source);
+        const target = positions.get(edge.target);
+        if (!source || !target) return null;
+        return { key: `${edge.source}->${edge.target}:${edge.label}`, source, target };
+      })
+      .filter((l): l is { key: string; source: Point; target: Point } => l !== null);
+
+    const points = graph.nodes.map((node) => ({
+      key: node.id,
+      pos: positions.get(node.id)!,
+      color: colorFor(node.kind),
+      r: node.kind === "iri" ? 0.09 : node.kind === "blank" ? 0.08 : 0.07,
+    }));
+
+    return { nodePoints: points, edgeLines: lines, viewBox: box };
+  }, [graph]);
+
+  return (
+    <svg viewBox={viewBox} className="h-full w-full" preserveAspectRatio="xMidYMid meet">
+      {edgeLines.map((line) => (
+        <line
+          key={line.key}
+          x1={line.source.x}
+          y1={line.source.y}
+          x2={line.target.x}
+          y2={line.target.y}
+          stroke="#d4d4d8"
+          strokeWidth={0.02}
+        />
+      ))}
+      {nodePoints.map((node) => (
+        <circle key={node.key} cx={node.pos.x} cy={node.pos.y} r={node.r} fill={node.color} />
+      ))}
+    </svg>
+  );
+}
+
 export function RdfGraphView({
   graph,
   highlightId,
@@ -189,20 +245,20 @@ export function RdfGraphView({
   // The currently-playing stage always renders for real, even at overview
   // zoom -- otherwise "watch Hans's given name flow through" would animate
   // into an invisible placeholder. Play only activates one stage at a
-  // time, so this adds at most one extra live WebGL context, not all 8.
-  const canRender = (zoom > ZOOM_RENDER_THRESHOLD && inRealViewport) || Boolean(active);
+  // time, so this adds at most one extra live WebGL context, not 48.
+  const canRenderInteractive = (zoom > ZOOM_RENDER_THRESHOLD && inRealViewport) || Boolean(active);
 
   return (
-    <div ref={wrapperRef} className="nodrag nowheel h-[600px] w-full rounded border border-neutral-200 bg-white">
-      {canRender ? (
+    <div ref={wrapperRef} className="nodrag nowheel relative h-[600px] w-full rounded border border-neutral-200 bg-white">
+      {canRenderInteractive ? (
         <SigmaGraphCanvas graph={graph} highlightId={highlightId} active={active} />
       ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-neutral-500">
-          <span className="text-sm font-medium">
-            {graph.nodes.length} nodes, {graph.edges.length} edges
-          </span>
-          <span className="text-xs">Zoom in to explore the graph</span>
-        </div>
+        <>
+          <SvgGraphPreview graph={graph} />
+          <div className="pointer-events-none absolute bottom-1.5 left-1.5 rounded bg-white/80 px-1.5 py-0.5 text-[10px] text-neutral-500">
+            {graph.nodes.length} nodes, {graph.edges.length} edges — zoom in to explore
+          </div>
+        </>
       )}
     </div>
   );
