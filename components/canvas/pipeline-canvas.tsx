@@ -17,13 +17,7 @@ import "@xyflow/react/dist/style.css";
 import { ArchitectureNode } from "./nodes/architecture-node";
 import { PipelineStageNode } from "./nodes/pipeline-stage-node";
 import { FlowEdge } from "./edges/flow-edge";
-import {
-  architectureNodes,
-  architectureEdges,
-  pipelineStageNodes,
-  flowEdges,
-  governanceEdges,
-} from "@/lib/canvas-layout";
+import { architectureNodes, pipelineStageNodes, flowEdges } from "@/lib/canvas-layout";
 
 const nodeTypes = {
   architectureNode: ArchitectureNode,
@@ -75,14 +69,15 @@ function PipelineCanvasInner() {
     [nodes, activeStageIndex],
   );
 
-  const edges: Edge[] = [
-    ...architectureEdges,
-    ...governanceEdges,
-    ...flowEdges.map((edge, i) => ({
-      ...edge,
-      data: { ...edge.data, active: playing && activeStageIndex === i + 1 },
-    })),
-  ];
+  // No architecture/governance connector lines -- operator asked for all
+  // lines between the big nodes removed. flowEdges are kept (not dropped
+  // entirely) since FlowEdge itself no longer draws a persistent line; the
+  // edge's path is only used as the amber particle's travel path during
+  // play, not shown at rest.
+  const edges: Edge[] = flowEdges.map((edge, i) => ({
+    ...edge,
+    data: { ...edge.data, active: playing && activeStageIndex === i + 1 },
+  }));
 
   return (
     <div className="relative h-screen w-screen bg-neutral-50">
