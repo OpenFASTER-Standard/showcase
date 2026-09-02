@@ -58,7 +58,20 @@ function PipelineCanvasInner() {
       >
         <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color="#d4d4d4" />
         <Controls />
-        <MiniMap pannable zoomable maskColor="rgba(255,255,255,0.6)" nodeColor="#d4d4d4" style={{ backgroundColor: "#fafafa" }} />
+        {/* position="top-right": the default bottom-right spot now sits
+            directly on top of the "Real XML" node in the 4-row layout
+            (confirmed live -- its fixed-size SVG was intercepting wheel/
+            pointer events meant for the node underneath). Row 1 only spans
+            the middle 3 columns, so the top corners are genuinely empty
+            canvas space regardless of pan/zoom starting state. */}
+        <MiniMap
+          position="top-right"
+          pannable
+          zoomable
+          maskColor="rgba(255,255,255,0.6)"
+          nodeColor="#d4d4d4"
+          style={{ backgroundColor: "#fafafa" }}
+        />
       </ReactFlow>
     </div>
   );

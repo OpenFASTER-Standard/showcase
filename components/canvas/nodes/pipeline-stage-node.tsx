@@ -6,6 +6,7 @@ import { SheetView, type Sheet } from "./sheet-view";
 export type PipelineStageNodeData = {
   title: string;
   subtitle: string;
+  fileUrl: string;
   kind: "sheet" | "graph" | "text";
   sheets?: Sheet[];
   graph?: RdfGraphData;
@@ -19,7 +20,14 @@ export function PipelineStageNode({ data }: NodeProps & { data: PipelineStageNod
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Top} id="gov" />
       <div className="mb-3">
-        <div className="text-base font-semibold text-neutral-900">{data.title}</div>
+        <a
+          href={data.fileUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="text-base font-semibold tracking-tight text-blue-700 hover:underline"
+        >
+          {data.title}
+        </a>
         <div className="text-xs text-neutral-500">{data.subtitle}</div>
       </div>
       {data.kind === "sheet" && data.sheets && <SheetView sheets={data.sheets} />}

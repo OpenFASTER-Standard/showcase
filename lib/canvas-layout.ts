@@ -6,8 +6,27 @@ import pipelineData from "@/data/pipeline-example.json";
 // (w-[900px]) without overlapping neighbors, now that both layers render
 // full real graphs rather than a small snippet or a few lines of prose.
 export const COL = [0, 980, 1960, 2940, 3920];
-const ARCHITECTURE_Y = 0;
-const STAGE_Y = 780;
+
+// Four stacked rows instead of one "reference ontologies" row + one
+// "pipeline trace" row: row 1 holds the three structural/shape ontologies
+// (XSDO/XMLO/SSO) Realizations draws its instance/structural/layout shape
+// from; row 2 is Institutional Ontology (the concepts Realizations draws
+// its domain vocabulary from); row 3 is Realizations itself, which sits
+// below both since it depends on all four; row 4 is the unchanged
+// pipeline-stage trace (Excel -> SSO graph -> A-box graph -> XMLO graph ->
+// Real XML) for the real Hans Muster fixture. 780 repeats the original
+// architecture-row -> stage-row gap (670-tall node + ~110px margin).
+const ROW1_Y = 0;
+const ROW2_Y = 780;
+const ROW3_Y = 1560;
+const ROW4_Y = 2340;
+// Row 1's three nodes (900px wide, 980px spacing) centered under the same
+// total span row 4's five columns cover -- (2 * 980 + 900) leaves exactly
+// 980px on each side of a 4820px-wide span, which happens to land on
+// COL[1]/COL[2]/COL[3] already.
+const ROW1_COL = [COL[1], COL[2], COL[3]];
+// Row 2/3's single node centered on that same span's midpoint.
+const ROW_CENTER_COL = COL[2];
 
 const architectureGraphs = pipelineData.architectureGraphs as Record<
   string,
@@ -25,43 +44,22 @@ const architectureGraphs = pipelineData.architectureGraphs as Record<
 const ARCHITECTURE_NODE_SIZE = { initialWidth: 900, initialHeight: 670 };
 
 export const architectureNodes: Node[] = [
+  // Row 1: the three structural/shape ontologies.
   {
-    id: "spreadsheet-ontology",
+    id: "xsd-ontology",
     type: "architectureNode",
-    position: { x: COL[0], y: ARCHITECTURE_Y },
+    position: { x: ROW1_COL[0], y: ROW1_Y },
     ...ARCHITECTURE_NODE_SIZE,
     data: {
-      label: "Spreadsheet Ontology",
-      fileUrl: "https://github.com/OpenFASTER-Standard/spreadsheet-ontology/blob/main/spreadsheet-ontology.owl",
-      graph: architectureGraphs["spreadsheet-ontology"],
-    },
-  },
-  {
-    id: "institutional-ontology",
-    type: "architectureNode",
-    position: { x: COL[1], y: ARCHITECTURE_Y },
-    ...ARCHITECTURE_NODE_SIZE,
-    data: {
-      label: "Institutional Ontology",
-      fileUrl: "https://github.com/OpenFASTER-Standard/institutional-ontology/blob/main/institutional-ontology.owl",
-      graph: architectureGraphs["institutional-ontology"],
-    },
-  },
-  {
-    id: "realizations",
-    type: "architectureNode",
-    position: { x: COL[2], y: ARCHITECTURE_Y },
-    ...ARCHITECTURE_NODE_SIZE,
-    data: {
-      label: "Realizations",
-      fileUrl: "https://github.com/OpenFASTER-Standard/realizations/blob/main/modules/kafe.ttl",
-      graph: architectureGraphs["realizations"],
+      label: "XSD Ontology",
+      fileUrl: "https://github.com/OpenFASTER-Standard/xsd-ontology/blob/main/xsd-ontology.owl",
+      graph: architectureGraphs["xsd-ontology"],
     },
   },
   {
     id: "xml-ontology",
     type: "architectureNode",
-    position: { x: COL[3], y: ARCHITECTURE_Y },
+    position: { x: ROW1_COL[1], y: ROW1_Y },
     ...ARCHITECTURE_NODE_SIZE,
     data: {
       label: "XML Ontology",
@@ -70,14 +68,38 @@ export const architectureNodes: Node[] = [
     },
   },
   {
-    id: "xsd-ontology",
+    id: "spreadsheet-ontology",
     type: "architectureNode",
-    position: { x: COL[4], y: ARCHITECTURE_Y },
+    position: { x: ROW1_COL[2], y: ROW1_Y },
     ...ARCHITECTURE_NODE_SIZE,
     data: {
-      label: "XSD Ontology",
-      fileUrl: "https://github.com/OpenFASTER-Standard/xsd-ontology/blob/main/xsd-ontology.owl",
-      graph: architectureGraphs["xsd-ontology"],
+      label: "Spreadsheet Ontology",
+      fileUrl: "https://github.com/OpenFASTER-Standard/spreadsheet-ontology/blob/main/spreadsheet-ontology.owl",
+      graph: architectureGraphs["spreadsheet-ontology"],
+    },
+  },
+  // Row 2: the concept ontology.
+  {
+    id: "institutional-ontology",
+    type: "architectureNode",
+    position: { x: ROW_CENTER_COL, y: ROW2_Y },
+    ...ARCHITECTURE_NODE_SIZE,
+    data: {
+      label: "Institutional Ontology",
+      fileUrl: "https://github.com/OpenFASTER-Standard/institutional-ontology/blob/main/institutional-ontology.owl",
+      graph: architectureGraphs["institutional-ontology"],
+    },
+  },
+  // Row 3: Realizations, which draws on all four ontologies above.
+  {
+    id: "realizations",
+    type: "architectureNode",
+    position: { x: ROW_CENTER_COL, y: ROW3_Y },
+    ...ARCHITECTURE_NODE_SIZE,
+    data: {
+      label: "Realizations",
+      fileUrl: "https://github.com/OpenFASTER-Standard/realizations/blob/main/modules/kafe.ttl",
+      graph: architectureGraphs["realizations"],
     },
   },
 ];
@@ -89,15 +111,27 @@ export const architectureEdges: Edge[] = [
   { id: "real-xsdo", source: "realizations", target: "xsd-ontology", type: "smoothstep", label: "structural shape from", style: { stroke: "#525252" } },
 ];
 
+// Real source file (+ exact function definition line, verified against
+// GitHub) each pipeline stage's data is actually produced by, per
+// realizations/scripts/export_showcase_data.py's own imports.
+const PIPELINE_STAGE_FILE_URLS: Record<string, string> = {
+  excel: "https://github.com/OpenFASTER-Standard/realizations/blob/main/generator/showcase_fixture.py#L15",
+  sso: "https://github.com/OpenFASTER-Standard/realizations/blob/main/generator/xlsx_ingest.py#L18",
+  abox: "https://github.com/OpenFASTER-Standard/realizations/blob/main/generator/xlsx_ingest.py#L126",
+  xmlo: "https://github.com/OpenFASTER-Standard/realizations/blob/main/generator/xml_instance_generator.py#L138",
+  xml: "https://github.com/OpenFASTER-Standard/realizations/blob/main/generator/xml_instance_generator.py#L185",
+};
+
 export const pipelineStageNodes: Node[] = pipelineData.stages.map((stage, i) => ({
   id: `stage-${stage.id}`,
   type: "pipelineStageNode",
-  position: { x: COL[i], y: STAGE_Y },
+  position: { x: COL[i], y: ROW4_Y },
   initialWidth: 900,
   initialHeight: stage.kind === "sheet" ? 230 : 690,
   data: {
     title: stage.title,
     subtitle: stage.subtitle,
+    fileUrl: PIPELINE_STAGE_FILE_URLS[stage.id],
     kind: stage.kind,
     sheets: "sheets" in stage ? stage.sheets : undefined,
     graph: "graph" in stage ? stage.graph : undefined,

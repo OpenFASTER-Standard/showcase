@@ -9,11 +9,19 @@ test("in-graph wheel-zoom centers on the cursor after the outer canvas has been 
   const node = page.locator(".react-flow__node-architectureNode").filter({ hasText: "Spreadsheet Ontology" });
   await expect(node.locator("canvas").first()).toBeVisible();
 
-  // Zoom the OUTER React Flow canvas first (mouse wheel over empty canvas
-  // space, not over a graph), simulating "zooming into the main canvas".
-  const canvasBox = await page.locator(".react-flow__pane").boundingBox();
-  if (!canvasBox) throw new Error("no react flow pane");
-  await page.mouse.move(canvasBox.x + 50, canvasBox.y + 50);
+  // Zoom the OUTER React Flow canvas first (mouse wheel over the node's own
+  // title bar -- not its Cytoscape canvas, which has nodrag/nowheel and
+  // would swallow the wheel event itself), simulating "zooming into the
+  // main canvas". Anchored on the target node's own position (not a fixed
+  // corner of the pane) so this stays correct regardless of where the node
+  // sits in the current layout -- zooming in near a screen point that
+  // isn't close to the node risks panning/zooming it off-screen entirely
+  // (onlyRenderVisibleElements then unmounts it).
+  const initialNodeBox = await node.boundingBox();
+  if (!initialNodeBox) throw new Error("no architecture node box");
+  const anchorX = initialNodeBox.x + initialNodeBox.width / 2;
+  const anchorY = initialNodeBox.y + 10;
+  await page.mouse.move(anchorX, anchorY);
   for (let i = 0; i < 8; i++) {
     await page.mouse.wheel(0, -100);
   }
