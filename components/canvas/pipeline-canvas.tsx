@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -9,7 +9,7 @@ import {
   Controls,
   MiniMap,
   Panel,
-  type Node,
+  useNodesState,
   type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -37,6 +37,17 @@ const STAGE_DURATION_MS = 1600;
 function PipelineCanvasInner() {
   const [activeStageIndex, setActiveStageIndex] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
+  // useNodesState (not a plain derived array) so dragging actually works:
+  // React Flow tracks a node's position in its own internal store during a
+  // drag, but only PERSISTS that change if something feeds the resulting
+  // NodeChange back in via onNodesChange -- without it, the "dragging" CSS
+  // class and selection state still appear (confirmed live), but the
+  // node's rendered position silently never updates. Re-deriving a fresh
+  // `nodes` array from the original static layout on every render (the
+  // previous approach) fed React Flow's own StoreUpdater a new array
+  // reference every time too, which would have fought any position state
+  // it did track.
+  const [nodes, , onNodesChange] = useNodesState([...architectureNodes, ...pipelineStageNodes]);
 
   const play = useCallback(() => {
     setPlaying(true);
@@ -50,13 +61,19 @@ function PipelineCanvasInner() {
     }, pipelineStageNodes.length * STAGE_DURATION_MS);
   }, []);
 
-  const nodes: Node[] = [
-    ...architectureNodes,
-    ...pipelineStageNodes.map((node, i) => ({
-      ...node,
-      data: { ...node.data, active: activeStageIndex === i },
-    })),
-  ];
+  // The "active" highlight is presentational, not a position change --
+  // overlaid on top of whatever `nodes` currently holds (real, possibly
+  // user-dragged positions) rather than folded into the drag-tracked state
+  // itself.
+  const displayNodes = useMemo(
+    () =>
+      nodes.map((node, i) =>
+        node.type === "pipelineStageNode"
+          ? { ...node, data: { ...node.data, active: activeStageIndex === i - architectureNodes.length } }
+          : node,
+      ),
+    [nodes, activeStageIndex],
+  );
 
   const edges: Edge[] = [
     ...architectureEdges,
@@ -83,8 +100,9 @@ function PipelineCanvasInner() {
           left and right edges by the same amount (confirmed live via each
           node's real getBoundingClientRect()) rather than actually fitting. */}
       <ReactFlow
-        nodes={nodes}
+        nodes={displayNodes}
         edges={edges}
+        onNodesChange={onNodesChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
