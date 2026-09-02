@@ -86,3 +86,10 @@ export const governanceEdges: Edge[] = [
   { id: "gov-xmlo", source: "stage-xmlo", sourceHandle: "gov", target: "xml-ontology", type: "straight", style: { strokeDasharray: "4 4" } },
   { id: "gov-xml", source: "stage-xml", sourceHandle: "gov", target: "xsd-ontology", type: "straight", style: { strokeDasharray: "4 4" } },
 ];
+
+export const flowEdges: Edge[] = [
+  { id: "flow-1", source: "stage-excel", target: "stage-sso", type: "flowEdge", data: { duration: 1.6 } },
+  { id: "flow-2", source: "stage-sso", target: "stage-abox", type: "flowEdge", data: { duration: 1.6 } },
+  { id: "flow-3", source: "stage-abox", target: "stage-xmlo", type: "flowEdge", data: { duration: 1.6 } },
+  { id: "flow-4", source: "stage-xmlo", target: "stage-xml", type: "flowEdge", data: { duration: 1.6 } },
+];
